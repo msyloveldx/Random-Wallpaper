@@ -1,1 +1,17 @@
+# HTTP请求库
 requests>=2.25.1
+
+# 图像处理库
+Pillow>=9.0.0
+
+# 注意：以下库为Python内置，无需安装
+# - tkinter (GUI界面)
+# - threading (多线程)
+# - os (操作系统接口)
+# - sys (系统相关参数)
+# - ctypes (C语言接口)
+# - logging (日志记录)
+# - json (JSON数据处理)
+# - datetime (日期时间处理)
+# - random (随机数生成)
+# - typing (类型提示，Python 3.5+)

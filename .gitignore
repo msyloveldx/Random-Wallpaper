@@ -207,9 +207,9 @@ marimo/_lsp/
 __marimo__/
 
 
-images/
+images/*
 !images/.gitkeep
-logs/
+logs/*
 !logs/.gitkeep
 .idea/
 *.spec
