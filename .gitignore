@@ -211,5 +211,5 @@ images/*
 !images/.gitkeep
 logs/*
 !logs/.gitkeep
-.idea/
+.idea/*
 *.spec
