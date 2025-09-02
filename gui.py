@@ -1719,12 +1719,40 @@ class ImageRandomGUI:
                 self.dynamic_download_btn.config(state='disabled')
                 self.update_dynamic_status("正在下载动态壁纸视频...")
 
-                # 下载视频
-                success = self.dynamic_api.download_dynamic_wallpaper()
+                # 使用当前预览的视频URL进行下载
+                video_url = self.dynamic_current_video_url
                 
-                if success:
+                # 确保videos目录存在
+                if not os.path.exists('videos'):
+                    os.makedirs('videos')
+                
+                # 生成保存路径
+                video_num = self.count_video_files_in_directory('videos')
+                save_path = f"videos/dynamic_wallpaper_{video_num + 1}.mp4"
+                
+                # 下载视频
+                response = requests.get(video_url, timeout=60, stream=True)
+                response.raise_for_status()
+                
+                total_size = int(response.headers.get('content-length', 0))
+                downloaded_size = 0
+                
+                with open(save_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            downloaded_size += len(chunk)
+                            
+                            # 更新进度（如果有总大小信息）
+                            if total_size > 0:
+                                progress = (downloaded_size / total_size) * 100
+                                self.root.after(0, self.update_dynamic_status, 
+                                              f"正在下载动态壁纸视频... {progress:.1f}%")
+                
+                # 检查下载是否成功
+                if os.path.exists(save_path) and os.path.getsize(save_path) > 0:
                     self.root.after(0, self.update_dynamic_status, "动态壁纸视频下载成功")
-                    self.root.after(0, messagebox.showinfo, "成功", "动态壁纸视频下载成功！")
+                    self.root.after(0, messagebox.showinfo, "成功", f"动态壁纸视频下载成功！\n已保存到: {save_path}")
                     self.root.after(0, self.update_dynamic_video_count)
                 else:
                     self.root.after(0, self.update_dynamic_status, "动态壁纸视频下载失败")
@@ -1746,17 +1774,28 @@ class ImageRandomGUI:
         """更新动态壁纸状态信息"""
         self.dynamic_status_label.config(text=message)
 
+    def count_video_files_in_directory(self, directory_path):
+        """统计指定目录下的视频文件数量（排除临时文件）"""
+        try:
+            if not os.path.exists(directory_path):
+                return 0
+                
+            file_count = 0
+            for item in os.listdir(directory_path):
+                item_path = os.path.join(directory_path, item)
+                if (os.path.isfile(item_path) and 
+                    item.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm')) and
+                    not item.startswith('temp_')):  # 排除临时文件
+                    file_count += 1
+            return file_count
+        except Exception as e:
+            print(f"Error counting video files: {e}")
+            return 0
+
     def update_dynamic_video_count(self):
         """更新动态壁纸视频计数"""
         try:
-            if not os.path.exists('videos'):
-                count = 0
-            else:
-                count = 0
-                for item in os.listdir('videos'):
-                    item_path = os.path.join('videos', item)
-                    if os.path.isfile(item_path) and item.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm')):
-                        count += 1
+            count = self.count_video_files_in_directory('videos')
             self.dynamic_count_label.config(text=f"视频数量: {count}")
         except Exception as e:
             self.dynamic_count_label.config(text="视频数量: 0")
